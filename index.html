@@ -14,6 +14,70 @@ body {
   align-items: center;
   font-family: Arial, sans-serif;
 }
+#landing {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+.landing-content {
+  text-align: center;
+  color: white;
+}
+.pokemon-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.pokemon-icon {
+  width: 50px;
+  height: 50px;
+  image-rendering: pixelated;
+  animation: bounce 1s ease-in-out infinite;
+}
+.pokemon-icon:nth-child(2) { animation-delay: 0.1s; }
+.pokemon-icon:nth-child(3) { animation-delay: 0.2s; }
+.pokemon-icon:nth-child(4) { animation-delay: 0.3s; }
+.pokemon-icon:nth-child(5) { animation-delay: 0.4s; }
+.pokemon-icon:nth-child(6) { animation-delay: 0.5s; }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.landing-content h1 {
+  font-size: 32px;
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #74b9ff;
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+#startBtn {
+  padding: 15px 50px;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 5px 20px rgba(238,90,36,0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#startBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(238,90,36,0.7);
+}
+#startBtn:active {
+  transform: scale(0.98);
+}
 #game {
   width: 350px;
   background: linear-gradient(180deg, #1e3a5f, #152238);
@@ -114,7 +178,22 @@ body {
 </style>
 </head>
 <body>
-<div id="game">
+<div id="landing">
+  <div class="landing-content">
+    <div class="pokemon-row">
+      <img src="img/p25.png" class="pokemon-icon">
+      <img src="img/p4.png" class="pokemon-icon">
+      <img src="img/p7.png" class="pokemon-icon">
+      <img src="img/p1.png" class="pokemon-icon">
+      <img src="img/p150.png" class="pokemon-icon">
+      <img src="img/p143.png" class="pokemon-icon">
+    </div>
+    <h1>Pokemon Match 3</h1>
+    <p class="subtitle">Drag. Match. Evolve.</p>
+    <button id="startBtn" onclick="startGame()">Start Game</button>
+  </div>
+</div>
+<div id="game" style="display:none">
   <div id="header">
     <div id="score">Score: 0</div>
     <div id="combo"></div>
@@ -438,7 +517,11 @@ function setMode(m) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-init();
+function startGame() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  init();
+}
 </script>
 </body>
 </html>
