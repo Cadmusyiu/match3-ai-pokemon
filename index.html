@@ -52,6 +52,9 @@ body {
   user-select: none;
   transition: transform 0.15s, box-shadow 0.15s;
   box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  background-size: 85% 85%;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 .gem:active { transform: scale(0.92); }
 .gem.selected {
@@ -60,7 +63,7 @@ body {
   z-index: 10;
 }
 .gem.path-gem {
-  box-shadow: 0 0 15px rgba(255,215,0,0.8);
+  box-shadow: 0 0 15px rgba(255,215,0,0.8), inset 0 0 10px rgba(255,215,0,0.3);
   transform: scale(1.08);
 }
 .gem.matched { animation: pop 0.3s forwards; }
@@ -135,7 +138,7 @@ const POKEMON = [
 ];
 
 function getPokemonImg(id) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+  return `img/p${id}.png`;
 }
 const COLS = 5, ROWS = 5;
 
@@ -177,7 +180,7 @@ function init() {
       
       const d = document.createElement('div');
       d.className = 'gem type-' + t;
-      d.innerHTML = '<img src="' + getPokemonImg(POKEMON[t].id) + '" width="90%" height="90%">';
+      d.style.backgroundImage = 'url("' + getPokemonImg(POKEMON[t].id) + '")';
       d.dataset.r = r;
       d.dataset.c = c;
       d.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e, d); }, {passive:false});
@@ -298,7 +301,7 @@ async function doShift() {
     const p = path[i];
     const t = grid[p.r][p.c];
     els[p.r][p.c].className = 'gem type-' + t;
-    els[p.r][p.c].innerHTML = '<img src="' + getPokemonImg(POKEMON[t].id) + '" width="90%" height="90%">';
+    els[p.r][p.c].style.backgroundImage = 'url("' + getPokemonImg(POKEMON[t].id) + '")';
     els[p.r][p.c].classList.remove('path-gem');
   }
   
@@ -379,7 +382,7 @@ async function processMatches(m) {
       for (let c = 0; c < COLS; c++) {
         const t = grid[r][c];
         els[r][c].className = 'gem type-' + t + ' falling';
-        els[r][c].innerHTML = '<img src="' + getPokemonImg(POKEMON[t].id) + '" width="90%" height="90%">';
+        els[r][c].style.backgroundImage = 'url("' + getPokemonImg(POKEMON[t].id) + '")';
         setTimeout(() => els[r][c].classList.remove('falling'), 400);
       }
     }
