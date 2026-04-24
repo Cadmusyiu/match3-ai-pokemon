@@ -563,6 +563,7 @@
             el.classList.add('path-gem');
             
             // Add preview numbers to all gems in path
+            // Number shows where the gem will MOVE TO
             for (let i = 0; i < game.currentPath.length; i++) {
                 const pos = game.currentPath[i];
                 const gemEl = game.elements[pos.row][pos.col];
@@ -571,12 +572,20 @@
                 const existingNum = gemEl.querySelector('.gem-number');
                 if (existingNum) existingNum.remove();
                 
-                // Calculate destination: last gem goes to position 1, etc.
-                const destIndex = game.currentPath.length - i;
-                if (destIndex <= game.currentPath.length) {
+                // Number = position this gem will move TO
+                // If gem is at position i in path, it will move to position (i+1) or last position
+                if (i === 0) {
+                    // First gem (starting gem) will move to LAST position
                     const numEl = document.createElement('div');
                     numEl.className = 'gem-number';
-                    numEl.textContent = destIndex;
+                    numEl.textContent = game.currentPath.length; // Will go to last position
+                    numEl.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)'; // Red for start
+                    gemEl.appendChild(numEl);
+                } else {
+                    // Other gems shift one position forward
+                    const numEl = document.createElement('div');
+                    numEl.className = 'gem-number';
+                    numEl.textContent = i; // Will go to previous position
                     gemEl.appendChild(numEl);
                 }
             }
