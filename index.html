@@ -551,15 +551,12 @@
                 return;
             }
             
-            // SIMPLE CIRCULAR SHIFT:
-            // When you drag A→B→C, gems shift one step FORWARD in the path
-            // A (at path[0]) moves to path[1]'s position (B's original position)
-            // B (at path[1]) moves to path[2]'s position (C's original position)
-            // C (at path[2]) moves to path[0]'s position (A's original position)
+            console.log('Processing path of length', pathLength);
             
             // Save first gem data
             const firstPos = game.currentPath[0];
             const firstPokemon = game.grid[firstPos.row][firstPos.col];
+            console.log('First gem:', firstPokemon?.emoji, 'at', firstPos.row, firstPos.col);
             
             // Shift gems FORWARD: each gem takes the NEXT position's content
             for (let i = 0; i < pathLength - 1; i++) {
@@ -572,32 +569,35 @@
             const lastPos = game.currentPath[pathLength - 1];
             game.grid[lastPos.row][lastPos.col] = firstPokemon;
             
-            // Update DOM to show new arrangement
+            console.log('Grid after shift, updating DOM...');
+            
+            // Update DOM to show new arrangement - directly set the emojis
             for (let i = 0; i < pathLength; i++) {
                 const pos = game.currentPath[i];
                 const pokemon = game.grid[pos.row][pos.col];
                 const el = game.elements[pos.row][pos.col];
                 
+                console.log('Setting pos', pos.row, pos.col, 'to', pokemon?.emoji);
                 el.textContent = pokemon.emoji;
-                el.className = `gem type-${pokemon.type} shifting`;
+                el.className = `gem type-${pokemon.type}`;
             }
             
-            await sleep(250);
+            // Force DOM update
+            gridContainer.offsetHeight;
             
-            // Remove shifting class
-            game.currentPath.forEach(p => {
-                game.elements[p.row][p.col].classList.remove('shifting');
-            });
+            await sleep(300);
             
             // Check for matches
             const matches = findMatches();
+            console.log('Matches found:', matches.length);
+            
             if (matches.length > 0) {
                 await processMatches(matches);
             }
             
             game.currentPath = [];
             
-            if (game.mode === 'hint' && !game.processing) {
+            if (game.mode === 'hint') {
                 showHint();
             }
             
