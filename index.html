@@ -125,7 +125,14 @@ body {
 </div>
 
 <script>
-const POKEMON = ['⚡','🔥','💧','🌿','🔮','😴'];
+const POKEMON = [
+  { emoji: '🐭', name: 'Pikachu' },   // Electric - yellow mouse
+  { emoji: '🦎', name: 'Charmander' }, // Fire - orange lizard  
+  { emoji: '🐢', name: 'Squirtle' },   // Water - blue turtle
+  { emoji: '🌱', name: 'Bulbasaur' },   // Grass - green bulb
+  { emoji: '👽', name: 'Mewtwo' },     // Psychic - alien head
+  { emoji: '😴', name: 'Snorlax' }     // Normal - sleeping face
+];
 const COLS = 5, ROWS = 5;
 
 let grid = [], els = [], score = 0, combo = 0;
@@ -166,7 +173,7 @@ function init() {
       
       const d = document.createElement('div');
       d.className = 'gem type-' + t;
-      d.textContent = POKEMON[t];
+      d.textContent = POKEMON[t].emoji;
       d.dataset.r = r;
       d.dataset.c = c;
       d.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e, d); }, {passive:false});
@@ -284,7 +291,7 @@ async function doShift() {
     const p = path[i];
     const t = grid[p.r][p.c];
     els[p.r][p.c].className = 'gem type-' + t;
-    els[p.r][p.c].textContent = POKEMON[t];
+    els[p.r][p.c].textContent = POKEMON[t].emoji;
     els[p.r][p.c].classList.remove('path-gem');
   }
   
@@ -365,7 +372,7 @@ async function processMatches(m) {
       for (let c = 0; c < COLS; c++) {
         const t = grid[r][c];
         els[r][c].className = 'gem type-' + t + ' falling';
-        els[r][c].textContent = POKEMON[t];
+        els[r][c].textContent = POKEMON[t].emoji;
         setTimeout(() => els[r][c].classList.remove('falling'), 400);
       }
     }
