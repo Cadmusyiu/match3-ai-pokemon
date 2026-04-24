@@ -1,823 +1,430 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎮 Pokemon Match 3</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: white;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
-        
-        #game-container {
-            width: 360px;
-            background: linear-gradient(180deg, #1e3a5f 0%, #152238 100%);
-            border-radius: 20px;
-            padding: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 60px rgba(52, 152, 219, 0.2);
-            border: 2px solid rgba(255,255,255,0.1);
-        }
-        
-        #stats-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            margin-bottom: 12px;
-        }
-        
-        #score-display {
-            font-size: 22px;
-            font-weight: bold;
-            color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        
-        #combo-display {
-            font-size: 18px;
-            font-weight: bold;
-            color: #ff6b6b;
-            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
-            min-width: 80px;
-            text-align: right;
-        }
-        
-        #grid-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 6px;
-            padding: 10px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 15px;
-            position: relative;
-            aspect-ratio: 1;
-        }
-        
-        .gem {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 36px;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-            position: relative;
-            user-select: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        
-        .gem:active {
-            transform: scale(0.95);
-        }
-        
-        .gem.path-active {
-            transform: scale(1.15);
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.9), 0 0 50px rgba(52, 152, 219, 0.8);
-            z-index: 15;
-        }
-        
-        .gem.matched {
-            animation: match-explode 0.4s ease-out forwards;
-        }
-        
-        @keyframes match-explode {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0.7; }
-            100% { transform: scale(0); opacity: 0; }
-        }
-        
-        .gem.falling {
-            animation: fall-drop 0.4s ease-out;
-        }
-        
-        @keyframes fall-drop {
-            0% { transform: translateY(-80px) scale(0.8); opacity: 0; }
-            60% { transform: translateY(5px) scale(1.05); opacity: 1; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        
-        .gem.shifting {
-            animation: shift-pop 0.25s ease-out;
-        }
-        
-        @keyframes shift-pop {
-            0% { transform: scale(0.8); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        
-        /* Pokemon types background */
-        .type-fire { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); }
-        .type-water { background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); }
-        .type-grass { background: linear-gradient(135deg, #55efc4 0%, #00b894 100%); }
-        .type-electric { background: linear-gradient(135deg, #feca57 0%, #f39c12 100%); }
-        .type-psychic { background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); }
-        .type-normal { background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%); }
-        
-        /* Path order indicator */
-        .path-indicator {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 22px;
-            height: 22px;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-            z-index: 25;
-            pointer-events: none;
-        }
-        
-        .gem.path-start .path-indicator {
-            background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 100%);
-            width: 26px;
-            height: 26px;
-            font-size: 14px;
-        }
-        
-        /* Combo popup */
-        #combo-popup {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 42px;
-            font-weight: bold;
-            color: #ffd700;
-            text-shadow: 0 0 20px #ff6b6b, 0 0 40px #ff6b6b, 2px 2px 4px rgba(0,0,0,0.5);
-            opacity: 0;
-            z-index: 100;
-            pointer-events: none;
-        }
-        
-        #combo-popup.show {
-            animation: combo-show 0.8s ease-out forwards;
-        }
-        
-        @keyframes combo-show {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            30% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-        }
-        
-        /* Score popup */
-        .score-pop {
-            position: absolute;
-            font-size: 18px;
-            font-weight: bold;
-            color: #ffd700;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-            animation: score-rise 1s ease-out forwards;
-            z-index: 50;
-            pointer-events: none;
-        }
-        
-        @keyframes score-rise {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
-        }
-        
-        /* Start overlay */
-        #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        #start-overlay.hidden {
-            display: none;
-        }
-        
-        .game-title {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #ffd700, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .game-subtitle {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 30px;
-        }
-        
-        .start-btn {
-            padding: 15px 50px;
-            font-size: 20px;
-            font-weight: bold;
-            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-            border: none;
-            border-radius: 30px;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 5px 20px rgba(0, 206, 201, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .start-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 206, 201, 0.6);
-        }
-        
-        #instructions {
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            font-size: 12px;
-            color: #aaa;
-            text-align: center;
-            line-height: 1.6;
-        }
-        
-        #mode-bar {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        
-        .mode-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .mode-btn.classic { background: rgba(255,255,255,0.1); color: white; }
-        .mode-btn.hint { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
-        .mode-btn.hint.active { background: rgba(255, 215, 0, 0.4); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pokemon Match 3</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: linear-gradient(135deg, #1a1a2e, #16213e); 
+  min-height: 100vh; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+#game {
+  width: 350px;
+  background: linear-gradient(180deg, #1e3a5f, #152238);
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+#score { font-size: 20px; font-weight: bold; color: #ffd700; }
+#combo { font-size: 16px; color: #ff6b6b; min-width: 60px; text-align: right; }
+#grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  padding: 8px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 10px;
+  aspect-ratio: 1;
+}
+.gem {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+.gem:active { transform: scale(0.92); }
+.gem.selected {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255,255,255,0.8);
+  z-index: 10;
+}
+.gem.path-gem {
+  box-shadow: 0 0 15px rgba(255,215,0,0.8);
+  transform: scale(1.08);
+}
+.gem.matched { animation: pop 0.3s forwards; }
+.gem.falling { animation: fall 0.4s; }
+@keyframes pop {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.5; }
+  100% { transform: scale(0); opacity: 0; }
+}
+@keyframes fall {
+  0% { transform: translateY(-60px); opacity: 0; }
+  70% { transform: translateY(5px); opacity: 1; }
+  100% { transform: translateY(0); }
+}
+.type-0 { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+.type-1 { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+.type-2 { background: linear-gradient(135deg, #55efc4, #00b894); }
+.type-3 { background: linear-gradient(135deg, #feca57, #f39c12); }
+.type-4 { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+.type-5 { background: linear-gradient(135deg, #dfe6e9, #b2bec3); }
+#modes {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
+.mode-btn.c { background: rgba(255,255,255,0.1); color: white; }
+.mode-btn.h { background: rgba(255,215,0,0.2); color: #ffd700; }
+.mode-btn.h.active { background: rgba(255,215,0,0.5); }
+#msg {
+  margin-top: 10px;
+  padding: 8px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #0f0;
+  min-height: 40px;
+  word-wrap: break-word;
+}
+</style>
 </head>
 <body>
-    <div id="start-overlay">
-        <div class="game-title">🎮 Pokemon Match 3</div>
-        <div class="game-subtitle">Drag path to shift gems!</div>
-        <button class="start-btn" id="start-btn">START GAME</button>
-    </div>
-    
-    <div id="game-container">
-        <div id="stats-bar">
-            <div id="score-display">Score: 0</div>
-            <div id="combo-display"></div>
-        </div>
-        
-        <div id="grid-container">
-            <div id="combo-popup"></div>
-        </div>
-        
-        <div id="mode-bar">
-            <button class="mode-btn classic" onclick="setMode('classic')">🎯 Classic</button>
-            <button class="mode-btn hint" id="hint-btn" onclick="setMode('hint')">💡 Hint</button>
-        </div>
-        
-        <div id="instructions">
-            🔄 Drag through gems along your path!<br>
-            Gems shift as you move.<br>
-            Match 3+ same type!
-        </div>
-    </div>
+<div id="game">
+  <div id="header">
+    <div id="score">Score: 0</div>
+    <div id="combo"></div>
+  </div>
+  <div id="grid"></div>
+  <div id="modes">
+    <button class="mode-btn c" onclick="setMode('classic')">🎯 Classic</button>
+    <button class="mode-btn h" id="hintBtn" onclick="setMode('hint')">💡 Hint</button>
+  </div>
+  <div id="msg">Debug info will appear here</div>
+</div>
 
-        <div id="debug-info" style="position:fixed;bottom:10px;left:10px;background:rgba(0,0,0,0.8);color:#0f0;padding:10px;font-size:12px;font-family:monospace;max-width:300px;word-wrap:break-word;z-index:9999;display:none;"></div>
+<script>
+const POKEMON = ['⚡','🔥','💧','🌿','🔮','😴'];
+const COLS = 5, ROWS = 5;
+
+let grid = [], els = [], score = 0, combo = 0;
+let path = [], isDragging = false, mode = 'classic', processing = false;
+let hintEl = null;
+
+const gridEl = document.getElementById('grid');
+const scoreEl = document.getElementById('score');
+const comboEl = document.getElementById('combo');
+const msgEl = document.getElementById('msg');
+
+function log(m) {
+  msgEl.innerHTML = m;
+  console.log(m);
+}
+
+function init() {
+  grid = [];
+  els = [];
+  gridEl.innerHTML = '';
+  score = 0;
+  combo = 0;
+  path = [];
+  updateScore();
+  
+  for (let r = 0; r < ROWS; r++) {
+    grid[r] = [];
+    els[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      let t;
+      do {
+        t = Math.floor(Math.random() * 6);
+      } while (
+        (c >= 2 && grid[r][c-1] === t && grid[r][c-2] === t) ||
+        (r >= 2 && grid[r-1][c] === t && grid[r-2][c] === t)
+      );
+      grid[r][c] = t;
+      
+      const d = document.createElement('div');
+      d.className = 'gem type-' + t;
+      d.textContent = POKEMON[t];
+      d.dataset.r = r;
+      d.dataset.c = c;
+      d.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e, d); }, {passive:false});
+      d.addEventListener('touchmove', e => { e.preventDefault(); moveDrag(e); }, {passive:false});
+      d.addEventListener('touchend', endDrag);
+      d.addEventListener('mousedown', e => startDrag(e, d));
+      gridEl.appendChild(d);
+      els[r][c] = d;
+    }
+  }
+  log('Game started! Drag gems to shift them.');
+}
+
+function startDrag(e, el) {
+  if (processing) return;
+  isDragging = true;
+  path = [];
+  
+  const r = parseInt(el.dataset.r);
+  const c = parseInt(el.dataset.c);
+  addToPath(r, c, el);
+  
+  document.addEventListener('mousemove', moveDrag);
+  document.addEventListener('mouseup', endDrag);
+}
+
+function addToPath(r, c, el) {
+  if (path.some(p => p.r === r && p.c === c)) return;
+  
+  const last = path[path.length - 1];
+  if (last) {
+    const dr = Math.abs(r - last.r);
+    const dc = Math.abs(c - last.c);
+    if (!((dr === 1 && dc === 0) || (dr === 0 && dc === 1))) return;
     
-    <script>
-        let debugLog = [];
-        function dbg(msg) {
-            debugLog.push(msg);
-            const el = document.getElementById('debug-info');
-            el.innerHTML = debugLog.slice(-5).join('<br>');
-            el.style.display = 'block';
-            console.log(msg);
+    // Backtrack
+    if (path.length >= 2) {
+      const prev = path[path.length - 2];
+      if (prev.r === r && prev.c === c) {
+        path.pop();
+        els[path[path.length-1].r][path[path.length-1].c].classList.remove('path-gem');
+        updatePathNums();
+        return;
+      }
+    }
+  }
+  
+  path.push({r, c});
+  el.classList.add('path-gem');
+  updatePathNums();
+}
+
+function updatePathNums() {
+  els.forEach(row => row.forEach(el => {
+    el.style.position = '';
+    const num = el.querySelector('.num');
+    if (num) num.remove();
+  }));
+  path.forEach((p, i) => {
+    els[p.r][p.c].classList.add('path-gem');
+  });
+}
+
+function moveDrag(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+  
+  const rect = gridEl.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  const cw = rect.width / COLS;
+  const ch = rect.height / ROWS;
+  
+  const c = Math.floor(x / cw);
+  const r = Math.floor(y / ch);
+  
+  if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+    addToPath(r, c, els[r][c]);
+  }
+}
+
+function endDrag(e) {
+  if (!isDragging) return;
+  document.removeEventListener('mousemove', moveDrag);
+  document.removeEventListener('mouseup', endDrag);
+  isDragging = false;
+  
+  if (path.length >= 2) {
+    doShift();
+  } else {
+    clearPath();
+  }
+}
+
+function clearPath() {
+  path.forEach(p => els[p.r][p.c].classList.remove('path-gem'));
+  path = [];
+}
+
+async function doShift() {
+  processing = true;
+  log('Shifting path length ' + path.length + '...');
+  
+  // CIRCULAR SHIFT: first gem goes to last position
+  const first = grid[path[0].r][path[0].c];
+  
+  // Shift forward
+  for (let i = 0; i < path.length - 1; i++) {
+    grid[path[i].r][path[i].c] = grid[path[i+1].r][path[i+1].c];
+  }
+  grid[path[path.length-1].r][path[path.length-1].c] = first;
+  
+  // Update DOM
+  for (let i = 0; i < path.length; i++) {
+    const p = path[i];
+    const t = grid[p.r][p.c];
+    els[p.r][p.c].className = 'gem type-' + t;
+    els[p.r][p.c].textContent = POKEMON[t];
+    els[p.r][p.c].classList.remove('path-gem');
+  }
+  
+  log('Shift done. Checking matches...');
+  await sleep(200);
+  
+  const matches = findMatches();
+  if (matches.length > 0) {
+    await processMatches(matches);
+  }
+  
+  path = [];
+  if (mode === 'hint') showHint();
+  processing = false;
+}
+
+function findMatches() {
+  const m = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS - 2; c++) {
+      const t = grid[r][c];
+      if (t !== null && t === grid[r][c+1] && t === grid[r][c+2]) {
+        m.push({r,c},{r,c:c+1},{r,c:c+2});
+      }
+    }
+  }
+  for (let c = 0; c < COLS; c++) {
+    for (let r = 0; r < ROWS - 2; r++) {
+      const t = grid[r][c];
+      if (t !== null && t === grid[r+1][c] && t === grid[r+2][c]) {
+        m.push({r,c},{r:r+1,c},{r:r+2,c});
+      }
+    }
+  }
+  // Dedupe
+  const seen = new Set();
+  return m.filter(p => {
+    const k = p.r+','+p.c;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
+async function processMatches(m) {
+  let round = 0;
+  while (m.length > 0) {
+    round++;
+    combo = round;
+    score += m.length * 50 + (round > 1 ? round * 50 : 0);
+    updateScore();
+    log('Round ' + round + '! Matches: ' + m.length + ', Score: ' + score);
+    
+    // Animate
+    m.forEach(p => els[p.r][p.c].classList.add('matched'));
+    await sleep(350);
+    
+    // Remove
+    m.forEach(p => grid[p.r][p.c] = null);
+    
+    // Drop
+    for (let c = 0; c < COLS; c++) {
+      let empty = 0;
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (grid[r][c] === null) empty++;
+        else if (empty > 0) {
+          grid[r+empty][c] = grid[r][c];
+          grid[r][c] = null;
         }
-        // Pokemon types
-        const POKEMON = [
-            { id: 'pikachu', emoji: '⚡', name: 'Pikachu', type: 'electric' },
-            { id: 'charmander', emoji: '🔥', name: 'Charmander', type: 'fire' },
-            { id: 'squirtle', emoji: '💧', name: 'Squirtle', type: 'water' },
-            { id: 'bulbasaur', emoji: '🌿', name: 'Bulbasaur', type: 'grass' },
-            { id: 'mewtwo', emoji: '🔮', name: 'Mewtwo', type: 'psychic' },
-            { id: 'snorlax', emoji: '😴', name: 'Snorlax', type: 'normal' }
-        ];
-        
-        const GRID_COLS = 5;
-        const GRID_ROWS = 5;
-        const MATCH_MIN = 3;
-        
-        let game = {
-            grid: [],
-            elements: [],
-            score: 0,
-            combo: 0,
-            isDragging: false,
-            currentPath: [],
-            mode: 'classic',
-            processing: false,
-            hintPos: null
-        };
-        
-        const gridContainer = document.getElementById('grid-container');
-        const scoreDisplay = document.getElementById('score-display');
-        const comboDisplay = document.getElementById('combo-display');
-        const comboPopup = document.getElementById('combo-popup');
-        const startOverlay = document.getElementById('start-overlay');
-        const hintBtn = document.getElementById('hint-btn');
-        
-        function initGame() {
-            game.grid = [];
-            game.elements = [];
-            game.score = 0;
-            game.combo = 0;
-            game.processing = false;
-            game.currentPath = [];
-            
-            const existing = gridContainer.querySelectorAll('.gem');
-            existing.forEach(g => g.remove());
-            
-            for (let row = 0; row < GRID_ROWS; row++) {
-                game.grid[row] = [];
-                game.elements[row] = [];
-                
-                for (let col = 0; col < GRID_COLS; col++) {
-                    let pokemon;
-                    do {
-                        pokemon = POKEMON[Math.floor(Math.random() * POKEMON.length)];
-                    } while (wouldCreateMatch(row, col, pokemon));
-                    
-                    game.grid[row][col] = pokemon;
-                    const el = createGemElement(pokemon, row, col);
-                    gridContainer.appendChild(el);
-                    game.elements[row][col] = el;
-                }
-            }
-            updateDisplay();
-        }
-        
-        function wouldCreateMatch(row, col, pokemon) {
-            if (col >= 2 && game.grid[row][col-1]?.id === pokemon.id && game.grid[row][col-2]?.id === pokemon.id) return true;
-            if (row >= 2 && game.grid[row-1]?.[col]?.id === pokemon.id && game.grid[row-2]?.[col]?.id === pokemon.id) return true;
-            return false;
-        }
-        
-        function createGemElement(pokemon, row, col) {
-            const el = document.createElement('div');
-            el.className = `gem type-${pokemon.type}`;
-            el.textContent = pokemon.emoji;
-            el.dataset.row = row;
-            el.dataset.col = col;
-            
-            el.addEventListener('touchstart', e => handleStart(e, el), { passive: false });
-            el.addEventListener('touchmove', e => handleMove(e), { passive: false });
-            el.addEventListener('touchend', e => handleEnd(e));
-            el.addEventListener('mousedown', e => handleStart(e, el));
-            
-            return el;
-        }
-        
-        function getGemAt(row, col) {
-            if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) return null;
-            return game.elements[row][col];
-        }
-        
-        function getGemFromEvent(e) {
-            const rect = gridContainer.getBoundingClientRect();
-            let clientX, clientY;
-            
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
-            const cellWidth = rect.width / GRID_COLS;
-            const cellHeight = rect.height / GRID_ROWS;
-            
-            const col = Math.floor(x / cellWidth);
-            const row = Math.floor(y / cellHeight);
-            
-            return getGemAt(row, col);
-        }
-        
-        function handleStart(e, el) {
-            if (game.processing) return;
-            e.preventDefault();
-            
-            game.isDragging = true;
-            game.currentPath = [];
-            
-            clearPathIndicators();
-            
-            const row = parseInt(el.dataset.row);
-            const col = parseInt(el.dataset.col);
-            addToPath(row, col, el);
-            
-            document.addEventListener('mousemove', handleMove);
-            document.addEventListener('mouseup', handleEnd);
-        }
-        
-        function handleMove(e) {
-            if (!game.isDragging) return;
-            e.preventDefault();
-            
-            const gem = getGemFromEvent(e);
-            if (!gem) return;
-            
-            const row = parseInt(gem.dataset.row);
-            const col = parseInt(gem.dataset.col);
-            
-            const last = game.currentPath[game.currentPath.length - 1];
-            if (!last) return;
-            
-            const dr = Math.abs(row - last.row);
-            const dc = Math.abs(col - last.col);
-            
-            if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
-                // Check if backtracking
-                if (game.currentPath.length >= 2) {
-                    const prev = game.currentPath[game.currentPath.length - 2];
-                    if (prev.row === row && prev.col === col) {
-                        removeFromPath();
-                        return;
-                    }
-                }
-                
-                // Check if already in path
-                const exists = game.currentPath.find(p => p.row === row && p.col === col);
-                if (exists) return;
-                
-                addToPath(row, col, gem);
-            }
-        }
-        
-        function handleEnd(e) {
-            if (!game.isDragging) return;
-            
-            document.removeEventListener('mousemove', handleMove);
-            document.removeEventListener('mouseup', handleEnd);
-            
-            game.isDragging = false;
-            
-            if (game.currentPath.length >= 2) {
-                processPath();
-            } else {
-                clearPathIndicators();
-            }
-        }
-        
-        function addToPath(row, col, el) {
-            game.currentPath.push({ row, col });
-            el.classList.add('path-active');
-            
-            // Add indicator showing order
-            const indicator = document.createElement('div');
-            indicator.className = 'path-indicator';
-            indicator.textContent = game.currentPath.length;
-            el.appendChild(indicator);
-            
-            // Mark first gem specially
-            if (game.currentPath.length === 1) {
-                el.classList.add('path-start');
-            }
-        }
-        
-        function removeFromPath() {
-            const removed = game.currentPath.pop();
-            const el = game.elements[removed.row][removed.col];
-            el.classList.remove('path-active', 'path-start');
-            
-            const indicator = el.querySelector('.path-indicator');
-            if (indicator) indicator.remove();
-            
-            // Re-number remaining indicators
-            game.currentPath.forEach((p, i) => {
-                const gemEl = game.elements[p.row][p.col];
-                const ind = gemEl.querySelector('.path-indicator');
-                if (ind) ind.textContent = i + 1;
-            });
-        }
-        
-        function clearPathIndicators() {
-            document.querySelectorAll('.gem').forEach(el => {
-                el.classList.remove('path-active', 'path-start');
-                const ind = el.querySelector('.path-indicator');
-                if (ind) ind.remove();
-            });
-            game.currentPath = [];
-        }
-        
-        async function processPath() {
-            game.processing = true;
-            clearPathIndicators();
-            
-            const pathLength = game.currentPath.length;
-            if (pathLength < 2) {
-                game.processing = false;
-                return;
-            }
-            
-            dbg('Processing path of length ' + pathLength);
-            
-            // Save first gem data
-            const firstPos = game.currentPath[0];
-            const firstPokemon = game.grid[firstPos.row][firstPos.col];
-            dbg('First gem: ' + (firstPokemon?.emoji || 'null') + ' at ' + firstPos.row + ',' + firstPos.col);
-            
-            // Shift gems FORWARD: each gem takes the NEXT position's content
-            for (let i = 0; i < pathLength - 1; i++) {
-                const toPos = game.currentPath[i];
-                const fromPos = game.currentPath[i + 1];
-                game.grid[toPos.row][toPos.col] = game.grid[fromPos.row][fromPos.col];
-            }
-            
-            // Place first gem at last position (circular wrap)
-            const lastPos = game.currentPath[pathLength - 1];
-            game.grid[lastPos.row][lastPos.col] = firstPokemon;
-            
-            dbg('Grid after shift, updating DOM...');
-            
-            // Update DOM to show new arrangement - directly set the emojis
-            for (let i = 0; i < pathLength; i++) {
-                const pos = game.currentPath[i];
-                const pokemon = game.grid[pos.row][pos.col];
-                const el = game.elements[pos.row][pos.col];
-                
-                dbg('Setting pos ' + pos.row + ',' + pos.col + ' to ' + (pokemon?.emoji || 'null'));
-                el.textContent = pokemon.emoji;
-                el.className = 'gem type-' + pokemon.type;
-            }
-            
-            // Force DOM update
-            gridContainer.offsetHeight;
-            
-            await sleep(300);
-            
-            // Check for matches
-            const matches = findMatches();
-            dbg('Matches found: ' + matches.length);
-            
-            if (matches.length > 0) {
-                await processMatches(matches);
-            }
-            
-            game.currentPath = [];
-            
-            if (game.mode === 'hint') {
-                showHint();
-            }
-            
-            game.processing = false;
-        }
-        
-        function findMatches() {
-            const matches = [];
-            
-            for (let row = 0; row < GRID_ROWS; row++) {
-                for (let col = 0; col < GRID_COLS - 2; col++) {
-                    const id = game.grid[row][col]?.id;
-                    if (!id) continue;
-                    
-                    let matchLen = 1;
-                    while (col + matchLen < GRID_COLS && game.grid[row][col + matchLen]?.id === id) {
-                        matchLen++;
-                    }
-                    
-                    if (matchLen >= MATCH_MIN) {
-                        for (let i = 0; i < matchLen; i++) {
-                            matches.push({ row, col: col + i, id });
-                        }
-                    }
-                }
-            }
-            
-            for (let col = 0; col < GRID_COLS; col++) {
-                for (let row = 0; row < GRID_ROWS - 2; row++) {
-                    const id = game.grid[row][col]?.id;
-                    if (!id) continue;
-                    
-                    let matchLen = 1;
-                    while (row + matchLen < GRID_ROWS && game.grid[row + matchLen]?.[col]?.id === id) {
-                        matchLen++;
-                    }
-                    
-                    if (matchLen >= MATCH_MIN) {
-                        for (let i = 0; i < matchLen; i++) {
-                            matches.push({ row: row + i, col, id });
-                        }
-                    }
-                }
-            }
-            
-            const unique = [];
-            const seen = new Set();
-            for (const m of matches) {
-                const key = `${m.row},${m.col}`;
-                if (!seen.has(key)) {
-                    seen.add(key);
-                    unique.push(m);
-                }
-            }
-            return unique;
-        }
-        
-        async function processMatches(matches) {
-            let roundCombo = 0;
-            
-            while (matches.length > 0) {
-                roundCombo++;
-                game.combo = roundCombo;
-                
-                const baseScore = matches.length * 50;
-                const comboBonus = roundCombo > 1 ? (roundCombo - 1) * 100 : 0;
-                const roundScore = baseScore + comboBonus;
-                
-                game.score += roundScore;
-                updateDisplay();
-                
-                if (roundCombo > 1) showCombo(roundCombo);
-                
-                const avgRow = matches.reduce((s, m) => s + m.row, 0) / matches.length;
-                const avgCol = matches.reduce((s, m) => s + m.col, 0) / matches.length;
-                showScorePopup(avgRow, avgCol, roundScore);
-                
-                for (const m of matches) {
-                    const el = game.elements[m.row][m.col];
-                    if (el) el.classList.add('matched');
-                }
-                
-                await sleep(400);
-                
-                for (const m of matches) {
-                    game.grid[m.row][m.col] = null;
-                }
-                
-                await dropAndFill();
-                matches = findMatches();
-            }
-        }
-        
-        async function dropAndFill() {
-            for (let col = 0; col < GRID_COLS; col++) {
-                let emptyCount = 0;
-                
-                for (let row = GRID_ROWS - 1; row >= 0; row--) {
-                    if (game.grid[row][col] === null) {
-                        emptyCount++;
-                    } else if (emptyCount > 0) {
-                        game.grid[row + emptyCount][col] = game.grid[row][col];
-                        game.grid[row][col] = null;
-                    }
-                }
-                
-                for (let row = 0; row < emptyCount; row++) {
-                    game.grid[row][col] = POKEMON[Math.floor(Math.random() * POKEMON.length)];
-                }
-            }
-            
-            for (let col = 0; col < GRID_COLS; col++) {
-                for (let row = GRID_ROWS - 1; row >= 0; row--) {
-                    const pokemon = game.grid[row][col];
-                    const el = game.elements[row][col];
-                    
-                    el.textContent = pokemon.emoji;
-                    el.className = `gem type-${pokemon.type} falling`;
-                    
-                    setTimeout(() => el.classList.remove('falling'), 400);
-                }
-            }
-            
-            await sleep(400);
-        }
-        
-        function showCombo(count) {
-            comboPopup.textContent = `${count}x COMBO!`;
-            comboPopup.classList.remove('show');
-            void comboPopup.offsetWidth;
-            comboPopup.classList.add('show');
-        }
-        
-        function showScorePopup(row, col, score) {
-            const popup = document.createElement('div');
-            popup.className = 'score-pop';
-            popup.textContent = `+${score}`;
-            
-            const rect = gridContainer.getBoundingClientRect();
-            popup.style.left = `${(col + 0.5) * (rect.width / GRID_COLS)}px`;
-            popup.style.top = `${row * (rect.height / GRID_ROWS)}px`;
-            
-            gridContainer.appendChild(popup);
-            setTimeout(() => popup.remove(), 1000);
-        }
-        
-        function updateDisplay() {
-            scoreDisplay.textContent = `Score: ${game.score}`;
-            comboDisplay.textContent = game.combo > 1 ? `${game.combo}x` : '';
-        }
-        
-        function findBestMove() {
-            for (let row = 0; row < GRID_ROWS; row++) {
-                for (let col = 0; col < GRID_COLS; col++) {
-                    if (col < GRID_COLS - 1 && wouldMatch(row, col, row, col + 1)) {
-                        return { r1: row, c1: col, r2: row, c2: col + 1 };
-                    }
-                    if (row < GRID_ROWS - 1 && wouldMatch(row, col, row + 1, col)) {
-                        return { r1: row, c1: col, r2: row + 1, c2: col };
-                    }
-                }
-            }
-            return null;
-        }
-        
-        function wouldMatch(r1, c1, r2, c2) {
-            const temp = game.grid[r1][c1];
-            game.grid[r1][c1] = game.grid[r2][c2];
-            game.grid[r2][c2] = temp;
-            
-            const matches = findMatches();
-            
-            game.grid[r2][c2] = game.grid[r1][c1];
-            game.grid[r1][c1] = temp;
-            
-            return matches.length > 0;
-        }
-        
-        function showHint() {
-            hideHint();
-            const move = findBestMove();
-            if (move) {
-                const el = game.elements[move.r1][move.c1];
-                el.style.boxShadow = '0 0 0 4px #ffd700, 0 0 20px #ffd700';
-                game.hintPos = el;
-            }
-        }
-        
-        function hideHint() {
-            if (game.hintPos) {
-                game.hintPos.style.boxShadow = '';
-                game.hintPos = null;
-            }
-        }
-        
-        function setMode(mode) {
-            game.mode = mode;
-            hintBtn.classList.toggle('active', mode === 'hint');
-            if (mode === 'hint') showHint();
-            else hideHint();
-        }
-        
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-        
-        document.getElementById('start-btn').addEventListener('click', () => {
-            startOverlay.classList.add('hidden');
-            initGame();
-        });
-        
-        document.addEventListener('contextmenu', e => e.preventDefault());
-    </script>
+      }
+      for (let r = 0; r < empty; r++) {
+        grid[r][c] = Math.floor(Math.random() * 6);
+      }
+    }
+    
+    // Update DOM
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const t = grid[r][c];
+        els[r][c].className = 'gem type-' + t + ' falling';
+        els[r][c].textContent = POKEMON[t];
+        setTimeout(() => els[r][c].classList.remove('falling'), 400);
+      }
+    }
+    
+    await sleep(400);
+    m = findMatches();
+  }
+}
+
+function updateScore() {
+  scoreEl.textContent = 'Score: ' + score;
+  comboEl.textContent = combo > 1 ? combo + 'x' : '';
+}
+
+function findHint() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      // Try right
+      if (c < COLS - 1) {
+        swap(r, c, r, c+1);
+        if (findMatches().length > 0) { swap(r, c, r, c+1); return {r1:r,c1:c,r2:r,c2:c+1}; }
+        swap(r, c, r, c+1);
+      }
+      // Try down
+      if (r < ROWS - 1) {
+        swap(r, c, r+1, c);
+        if (findMatches().length > 0) { swap(r, c, r+1, c); return {r1:r,c1:c,r2:r+1,c2:c}; }
+        swap(r, c, r+1, c);
+      }
+    }
+  }
+  return null;
+}
+
+function swap(r1,c1,r2,c2) {
+  const t = grid[r1][c1];
+  grid[r1][c1] = grid[r2][c2];
+  grid[r2][c2] = t;
+}
+
+function showHint() {
+  if (hintEl) { hintEl.style.boxShadow = ''; hintEl = null; }
+  const h = findHint();
+  if (h) {
+    hintEl = els[h.r1][h.c1];
+    hintEl.style.boxShadow = '0 0 0 4px #ffd700, 0 0 20px #ffd700';
+  }
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('hintBtn').classList.toggle('active', m === 'hint');
+  if (m === 'hint') showHint();
+  else if (hintEl) { hintEl.style.boxShadow = ''; hintEl = null; }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+init();
+</script>
 </body>
 </html>
