@@ -126,13 +126,17 @@ body {
 
 <script>
 const POKEMON = [
-  { emoji: '🐭', name: 'Pikachu' },   // Electric - yellow mouse
-  { emoji: '🦎', name: 'Charmander' }, // Fire - orange lizard  
-  { emoji: '🐢', name: 'Squirtle' },   // Water - blue turtle
-  { emoji: '🌱', name: 'Bulbasaur' },   // Grass - green bulb
-  { emoji: '👽', name: 'Mewtwo' },     // Psychic - alien head
-  { emoji: '😴', name: 'Snorlax' }     // Normal - sleeping face
+  { id: 25, name: 'Pikachu' },   // Electric - yellow mouse
+  { id: 4, name: 'Charmander' }, // Fire - orange lizard  
+  { id: 7, name: 'Squirtle' },   // Water - blue turtle
+  { id: 1, name: 'Bulbasaur' },   // Grass - green bulb
+  { id: 150, name: 'Mewtwo' },     // Psychic - alien head
+  { id: 143, name: 'Snorlax' }     // Normal - sleeping face
 ];
+
+function getPokemonImg(id) {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+}
 const COLS = 5, ROWS = 5;
 
 let grid = [], els = [], score = 0, combo = 0;
@@ -173,7 +177,7 @@ function init() {
       
       const d = document.createElement('div');
       d.className = 'gem type-' + t;
-      d.textContent = POKEMON[t].emoji;
+      d.innerHTML = '<img src="' + getPokemonImg(POKEMON[t].id) + '" width="90%" height="90%">';
       d.dataset.r = r;
       d.dataset.c = c;
       d.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e, d); }, {passive:false});
@@ -286,12 +290,15 @@ async function doShift() {
   }
   grid[path[path.length-1].r][path[path.length-1].c] = first;
   
-  // Update DOM
+      els[p.r][p.c].classList.remove('path-gem');
+  }
+  
+  // Update DOM with actual Pokemon images
   for (let i = 0; i < path.length; i++) {
     const p = path[i];
     const t = grid[p.r][p.c];
     els[p.r][p.c].className = 'gem type-' + t;
-    els[p.r][p.c].textContent = POKEMON[t].emoji;
+    els[p.r][p.c].innerHTML = '<img src="' + getPokemonImg(POKEMON[t].id) + '" width="90%" height="90%">';
     els[p.r][p.c].classList.remove('path-gem');
   }
   
@@ -372,7 +379,7 @@ async function processMatches(m) {
       for (let c = 0; c < COLS; c++) {
         const t = grid[r][c];
         els[r][c].className = 'gem type-' + t + ' falling';
-        els[r][c].textContent = POKEMON[t].emoji;
+        els[r][c].innerHTML = '<img src="' + getPokemonImg(POKEMON[t].id) + '" width="90%" height="90%">';
         setTimeout(() => els[r][c].classList.remove('falling'), 400);
       }
     }
