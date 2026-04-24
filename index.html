@@ -293,9 +293,6 @@ async function doShift() {
   }
   grid[path[path.length-1].r][path[path.length-1].c] = first;
   
-      els[p.r][p.c].classList.remove('path-gem');
-  }
-  
   // Update DOM with actual Pokemon images
   for (let i = 0; i < path.length; i++) {
     const p = path[i];
